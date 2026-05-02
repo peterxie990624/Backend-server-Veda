@@ -1,0 +1,44 @@
+name: Backend Auto Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Deploy to server
+      env:
+        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
+        
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'DEPLOY'
+        cd /home/ubuntu/Backend-server-Veda
+        git pull origin main || git pull origin master || true
+        npm install
+        npm rebuild
+        kill -9 $(pgrep -f 'node server.js') 2>/dev/null || true
+        sleep 2
+        nohup npm start > /tmp/backend.log 2>&1 &
+        sleep 3
+        curl -s http://127.0.0.1:3001/api/memo/health | head -c 100
+        echo ""
+        DEPLOY
