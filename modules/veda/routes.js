@@ -8,7 +8,7 @@ const path = require('path');
 const router = express.Router();
 
 // 数据文件路径
-const DATA_DIR = path.join(__dirname, 'data/veda');
+const DATA_DIR = path.join(__dirname, 'data');
 
 // 缓存对象（避免重复读取文件）
 const dataCache = {};
