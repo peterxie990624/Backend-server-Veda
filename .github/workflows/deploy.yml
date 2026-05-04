@@ -15,8 +15,9 @@ jobs:
           host: 124.223.1.32
           username: ubuntu
           password: ${{ secrets.SERVER_PASSWORD }}
+          envs: GITHUB_TOKEN
           script: |
             cd /home/ubuntu/Backend-server-Veda
-            git pull origin main
+            git pull https://peterxie990624:${{ secrets.GH_TOKEN }}@github.com/peterxie990624/Backend-server-Veda.git main
             npm install
             pm2 restart server || node server.js &
